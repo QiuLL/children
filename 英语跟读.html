@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Love - English Learning</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .story-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .story-text {
+            font-size: 24px;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+        .highlight {
+            background-color: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #3e8e41;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .recording {
+            background-color: #f44336 !important;
+        }
+        .error-message {
+            color: #d32f2f;
+            background-color: #fce4ec;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .local-test-warning {
+            background-color: #fff3e0;
+            border-left: 4px solid #ffa000;
+            padding: 10px;
+            text-align: left;
+            margin: 10px 0;
+        }
+        .family-image {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background-color: #ffccbc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Family Love Story</h1>
+    
+    <div class="family-image">👨‍👩‍👧‍👦</div>
+    
+    <div class="story-container">
+        <!-- 本地测试警告提示 -->
+        <div class="local-test-warning" id="localWarning" style="display: none;">
+            <strong>⚠️ 本地文件限制：</strong> 
+            直接打开HTML文件可能导致麦克风不可用。<br>
+            解决方案：<br>
+            1. 使用VS Code的<b>Live Server</b>扩展<br>
+            2. 或访问在线演示：<a href="#" id="onlineDemoLink">示例链接</a>
+        </div>
+
+        <div class="story-text" id="storyText">
+            Dad, mum, brother, sister. Grandpa, grandma, all together. Love, love, we love each other.
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Reading</button>
+            <button id="recordBtn">Record My Voice</button>
+        </div>
+        
+        <!-- 错误信息显示区域 -->
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // 检测是否本地文件环境
+        if (window.location.protocol === 'file:') {
+            document.getElementById('localWarning').style.display = 'block';
+            document.getElementById('onlineDemoLink').href = 
+                'https://example.com/your-online-demo'; // 替换为你的在线地址
+        }
+
+        const story = "Dad, mum, brother, sister. Grandpa, grandma, all together. Love, love, we love each other.";
+        const words = story.split(/(\s|\.|,)/).filter(word => word.trim().length > 0);
+        let currentWordIndex = 0;
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        
+        const storyText = document.getElementById('storyText');
+        const startBtn = document.getElementById('startBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // 初始化故事文本
+        function initializeStory() {
+            const html = words.map(word => {
+                if (word === '.' || word === ',') {
+                    return `<span class="punctuation">${word}</span>`;
+                }
+                return `<span>${word}</span>`;
+            }).join(' ');
+            storyText.innerHTML = html;
+        }
+
+        // 高亮当前单词
+        function highlightWord(index) {
+            const spans = storyText.querySelectorAll('span');
+            spans.forEach((span, i) => {
+                span.classList.toggle('highlight', i === index);
+            });
+        }
+
+        // 朗读故事（逐词）
+        function readStory() {
+            if (currentWordIndex >= words.length) {
+                currentWordIndex = 0;
+                startBtn.textContent = 'Start Reading';
+                return;
+            }
+            
+            highlightWord(currentWordIndex);
+            
+            const utterance = new SpeechSynthesisUtterance(words[currentWordIndex]);
+            utterance.rate = 0.8;
+            speechSynthesis.speak(utterance);
+            
+            currentWordIndex++;
+            
+            if (currentWordIndex < words.length) {
+                setTimeout(readStory, 1000);
+            } else {
+                startBtn.textContent = 'Start Reading';
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // 开始/停止录音
+        recordBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    // 直接由用户点击触发（满足浏览器安全要求）
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (e) => {
+                        audioChunks.push(e.data);
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        // 实际应用中这里可以发送到语音识别API
+                        console.log('录音完成，音频大小:', audioBlob.size);
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.classList.add('recording');
+                    recordBtn.textContent = 'Stop Recording';
+                    showError("🎤 录音中...请大声朗读高亮单词");
+                    
+                } catch (err) {
+                    let errorMsg = "麦克风访问失败: ";
+                    if (err.name === 'NotAllowedError') {
+                        errorMsg += "请确保已允许麦克风权限（包括系统设置和浏览器权限）";
+                    } else if (err.name === 'NotFoundError') {
+                        errorMsg += "未找到麦克风设备";
+                    } else if (window.location.protocol === 'file:') {
+                        errorMsg += "本地文件无法使用麦克风，请使用HTTP服务器运行";
+                    } else {
+                        errorMsg += err.message;
+                    }
+                    showError(errorMsg);
+                }
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                recordBtn.textContent = 'Record My Voice';
+                showError("✅ 录音已保存（演示版不实际检查发音）");
+            }
+        });
+
+        // 开始/停止朗读
+        startBtn.addEventListener('click', () => {
+            if (startBtn.textContent === 'Start Reading') {
+                startBtn.textContent = 'Stop Reading';
+                readStory();
+            } else {
+                startBtn.textContent = 'Start Reading';
+                currentWordIndex = words.length;
+                speechSynthesis.cancel();
+            }
+        });
+
+        // 初始化页面
+        initializeStory();
+    </script>
+</body>
+</html>
