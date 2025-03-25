@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭英语学习游戏</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            color: #ff6b6b;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #4d96ff;
+            border-bottom: 2px dashed #4d96ff;
+            padding-bottom: 10px;
+        }
+        .poem {
+            font-size: 24px;
+            line-height: 1.6;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .highlight {
+            background-color: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+        button {
+            background-color: #4d96ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #3a7bd5;
+            transform: scale(1.05);
+        }
+        .speaker {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234d96ff"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>');
+            background-size: contain;
+            cursor: pointer;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .matching-game {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .word-column, .meaning-column {
+            width: 48%;
+        }
+        .word-item, .meaning-item {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .word-item:hover, .meaning-item:hover {
+            background-color: #f0f0f0;
+        }
+        .selected {
+            background-color: #d4edff;
+        }
+        .correct {
+            background-color: #c8e6c9;
+        }
+        .incorrect {
+            background-color: #ffcdd2;
+        }
+        .fill-blank {
+            margin: 20px 0;
+        }
+        .blank {
+            display: inline-block;
+            width: 100px;
+            height: 30px;
+            border-bottom: 2px solid #4d96ff;
+            margin: 0 5px;
+            vertical-align: middle;
+            text-align: center;
+            cursor: pointer;
+        }
+        .word-option {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 5px;
+            border: 1px solid #4d96ff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .word-option:hover {
+            background-color: #e3f2fd;
+        }
+        .options-container {
+            margin-top: 15px;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .positive {
+            color: #2e7d32;
+        }
+        .negative {
+            color: #c62828;
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        #readStatus {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>👨‍👩‍👧‍👦 家庭英语学习游戏 👵👴</h1>
+    
+    <div class="section">
+        <h2>短文内容</h2>
+        <div class="poem" id="poem">
+            Dad, mum, brother, sister.<br>
+            Grandpa, grandma, all together.<br>
+            Love, love, we love each other.
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>1. 短文跟读游戏</h2>
+        <p>点击"朗读短文"按钮听短文朗读，然后点击"开始跟读"按钮进行跟读练习。</p>
+        <div class="controls">
+            <button id="readPoem">朗读短文</button>
+            <button id="startRead">开始跟读</button>
+            <button id="stopRead" disabled>停止跟读</button>
+        </div>
+        <div id="readStatus"></div>
+        <div class="feedback" id="readFeedback"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 单词与中文意思配对</h2>
+        <p>点击左边的英语单词和右边的中文意思进行配对，配对的单词和意思会高亮显示。</p>
+        <div class="matching-game">
+            <div class="word-column" id="wordColumn"></div>
+            <div class="meaning-column" id="meaningColumn"></div>
+        </div>
+        <button id="checkMatching">检查配对</button>
+        <button id="resetMatching">重新开始</button>
+        <div class="feedback" id="matchingFeedback"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 单词填空游戏</h2>
+        <p>从下面的选项中选择正确的单词填入短文的空白处。</p>
+        <div class="fill-blank" id="fillBlankPoem"></div>
+        <div class="options-container" id="wordOptions"></div>
+        <button id="checkFillBlank">检查填空</button>
+        <button id="resetFillBlank">重新开始</button>
+        <div class="feedback" id="fillBlankFeedback"></div>
+    </div>
+
+    <script>
+        // 短文内容
+        const poemText = "Dad, mum, brother, sister. Grandpa, grandma, all together. Love, love, we love each other.";
+        const poemLines = poemText.split('. ').map(line => line + (line.endsWith('.') ? '' : '.'));
+        
+        // 单词和中文意思
+        const vocabulary = [
+            { word: "Dad", meaning: "爸爸" },
+            { word: "mum", meaning: "妈妈" },
+            { word: "brother", meaning: "兄弟" },
+            { word: "sister", meaning: "姐妹" },
+            { word: "Grandpa", meaning: "爷爷" },
+            { word: "grandma", meaning: "奶奶" },
+            { word: "all together", meaning: "在一起" },
+            { word: "Love", meaning: "爱" },
+            { word: "each other", meaning: "彼此" }
+        ];
+        
+        // 1. 短文跟读功能
+        const poemElement = document.getElementById('poem');
+        const readPoemBtn = document.getElementById('readPoem');
+        const startReadBtn = document.getElementById('startRead');
+        const stopReadBtn = document.getElementById('stopRead');
+        const readStatus = document.getElementById('readStatus');
+        const readFeedback = document.getElementById('readFeedback');
+        
+        let words = [];
+        let currentWordIndex = 0;
+        let isFollowing = false;
+        let speechRecognition;
+        let currentUtterance = null;
+
+        // 朗读整篇短文
+        function readWholePoem() {
+            if (currentUtterance) {
+                speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(poemText);
+            utterance.lang = 'en-US';
+            currentUtterance = utterance;
+            speechSynthesis.speak(utterance);
+            readStatus.textContent = "正在朗读短文...";
+            
+            utterance.onend = function() {
+                readStatus.textContent = "短文朗读完成";
+                currentUtterance = null;
+            };
+        }
+        
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!window.SpeechRecognition) {
+                readFeedback.textContent = "您的浏览器不支持语音识别功能，请使用Chrome或Edge浏览器。";
+                return false;
+            }
+            
+            speechRecognition = new window.SpeechRecognition();
+            speechRecognition.interimResults = false;
+            speechRecognition.lang = 'en-US';
+            speechRecognition.continuous = false;
+            
+            return true;
+        }
+        
+        // 高亮当前单词并朗读
+        function highlightCurrentWord() {
+            // 移除之前的高亮
+            const highlighted = document.querySelectorAll('.highlight');
+            highlighted.forEach(el => el.classList.remove('highlight'));
+            
+            if (currentWordIndex >= words.length) {
+                stopFollowing();
+                readStatus.textContent = "跟读完成！";
+                return;
+            }
+
+            // 高亮当前单词
+            const wordSpan = document.getElementById(`word-${currentWordIndex}`);
+            if (wordSpan) {
+                wordSpan.classList.add('highlight');
+                wordSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 朗读单词
+                const wordToRead = words[currentWordIndex].replace(/[.,]/g, '');
+                readStatus.textContent = `请跟读: ${wordToRead}`;
+                readFeedback.textContent = "正在聆听您的发音...";
+                
+                if (currentUtterance) {
+                    speechSynthesis.cancel();
+                }
+                
+                const utterance = new SpeechSynthesisUtterance(wordToRead);
+                utterance.lang = 'en-US';
+                currentUtterance = utterance;
+                speechSynthesis.speak(utterance);
+                
+                utterance.onend = function() {
+                    currentUtterance = null;
+                    // 开始语音识别
+                    try {
+                        speechRecognition.start();
+                    } catch (e) {
+                        console.error("语音识别错误:", e);
+                        setTimeout(() => {
+                            currentWordIndex++;
+                            highlightCurrentWord();
+                        }, 1000);
+                    }
+                };
+            }
+        }
+        
+        // 设置语音识别回调
+        function setupRecognitionCallbacks() {
+            speechRecognition.onresult = (event) => {
+                const spokenWord = event.results[0][0].transcript.trim().toLowerCase();
+                const expectedWord = words[currentWordIndex].toLowerCase().replace(/[.,]/g, '');
+                
+                if (spokenWord === expectedWord) {
+                    readFeedback.textContent = `✓ 发音正确！您说的是: "${spokenWord}"`;
+                    readFeedback.className = "feedback positive";
+                } else {
+                    readFeedback.textContent = `发音不太对哦。您说的是"${spokenWord}"，应该是"${expectedWord}"。`;
+                    readFeedback.className = "feedback negative";
+                }
+                
+                // 继续下一个单词
+                currentWordIndex++;
+                setTimeout(highlightCurrentWord, 1000);
+            };
+            
+            speechRecognition.onerror = (event) => {
+                if (event.error === 'no-speech') {
+                    readFeedback.textContent = "没有检测到语音，请再试一次。";
+                } else {
+                    readFeedback.textContent = "识别出错，请再试一次。";
+                }
+                readFeedback.className = "feedback negative";
+                
+                // 继续尝试
+                if (isFollowing) {
+                    setTimeout(highlightCurrentWord, 1000);
+                }
+            };
+        }
+        
+        // 开始跟读
+        function startFollowing() {
+            if (!initSpeechRecognition()) return;
+            
+            // 分解短文为单词
+            poemElement.innerHTML = poemLines.map(line => {
+                const lineWords = line.split(/(\s+)/).filter(w => w.trim().length > 0);
+                return lineWords.map((word, i) => 
+                    `<span id="word-${words.length + i}">${word}</span>`
+                ).join(' ') + '<br>';
+            }).join('');
+            
+            words = Array.from(document.querySelectorAll('#poem span')).map(span => span.textContent);
+            currentWordIndex = 0;
+            isFollowing = true;
+            
+            readPoemBtn.disabled = true;
+            startReadBtn.disabled = true;
+            stopReadBtn.disabled = false;
+            readStatus.textContent = "准备开始跟读...";
+            readFeedback.textContent = "";
+            
+            setupRecognitionCallbacks();
+            highlightCurrentWord();
+        }
+        
+        // 停止跟读
+        function stopFollowing() {
+            isFollowing = false;
+            if (speechRecognition) {
+                speechRecognition.stop();
+            }
+            if (currentUtterance) {
+                speechSynthesis.cancel();
+                currentUtterance = null;
+            }
+            
+            readPoemBtn.disabled = false;
+            startReadBtn.disabled = false;
+            stopReadBtn.disabled = true;
+            readStatus.textContent = "跟读已停止";
+        }
+        
+        // 按钮事件监听
+        readPoemBtn.addEventListener('click', readWholePoem);
+        startReadBtn.addEventListener('click', startFollowing);
+        stopReadBtn.addEventListener('click', stopFollowing);
+        
+        // 2. 单词与中文意思配对游戏
+        const wordColumn = document.getElementById('wordColumn');
+        const meaningColumn = document.getElementById('meaningColumn');
+        const checkMatchingBtn = document.getElementById('checkMatching');
+        const resetMatchingBtn = document.getElementById('resetMatching');
+        const matchingFeedback = document.getElementById('matchingFeedback');
+        
+        let selectedWord = null;
+        let selectedMeaning = null;
+        let matches = [];
+        
+        // 创建喇叭图标
+        function createSpeakerIcon() {
+            const speaker = document.createElement('span');
+            speaker.className = 'speaker';
+            speaker.onclick = function(e) {
+                e.stopPropagation();
+                const word = this.parentElement.textContent.replace('🔊', '').trim();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            };
+            return speaker;
+        }
+        
+        // 初始化配对游戏
+        function initMatchingGame() {
+            wordColumn.innerHTML = '';
+            meaningColumn.innerHTML = '';
+            matches = [];
+            selectedWord = null;
+            selectedMeaning = null;
+            matchingFeedback.textContent = '';
+            
+            // 打乱单词和意思的顺序
+            const shuffledWords = [...vocabulary].sort(() => Math.random() - 0.5);
+            const shuffledMeanings = [...vocabulary].map(v => v.meaning).sort(() => Math.random() - 0.5);
+            
+            // 添加单词
+            shuffledWords.forEach((item, index) => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.textContent = item.word;
+                wordItem.appendChild(createSpeakerIcon());
+                wordItem.dataset.index = index;
+                wordItem.dataset.word = item.word;
+                
+                wordItem.addEventListener('click', () => {
+                    if (wordItem.classList.contains('correct')) return;
+                    
+                    if (selectedWord === wordItem) {
+                        wordItem.classList.remove('selected');
+                        selectedWord = null;
+                    } else {
+                        document.querySelectorAll('.word-item').forEach(item => item.classList.remove('selected'));
+                        wordItem.classList.add('selected');
+                        selectedWord = wordItem;
+                        
+                        if (selectedMeaning) {
+                            checkPair();
+                        }
+                    }
+                });
+                
+                wordColumn.appendChild(wordItem);
+            });
+            
+            // 添加中文意思
+            shuffledMeanings.forEach((meaning, index) => {
+                const meaningItem = document.createElement('div');
+                meaningItem.className = 'meaning-item';
+                meaningItem.textContent = meaning;
+                meaningItem.dataset.index = index;
+                meaningItem.dataset.meaning = meaning;
+                
+                meaningItem.addEventListener('click', () => {
+                    if (meaningItem.classList.contains('correct')) return;
+                    
+                    if (selectedMeaning === meaningItem) {
+                        meaningItem.classList.remove('selected');
+                        selectedMeaning = null;
+                    } else {
+                        document.querySelectorAll('.meaning-item').forEach(item => item.classList.remove('selected'));
+                        meaningItem.classList.add('selected');
+                        selectedMeaning = meaningItem;
+                        
+                        if (selectedWord) {
+                            checkPair();
+                        }
+                    }
+                });
+                
+                meaningColumn.appendChild(meaningItem);
+            });
+        }
+        
+        // 检查配对
+        function checkPair() {
+            const word = selectedWord.dataset.word;
+            const meaning = selectedMeaning.dataset.meaning;
+            
+            const isCorrect = vocabulary.some(v => v.word === word && v.meaning === meaning);
+            
+            if (isCorrect) {
+                selectedWord.classList.add('correct');
+                selectedMeaning.classList.add('correct');
+                selectedWord.classList.remove('selected');
+                selectedMeaning.classList.remove('selected');
+                selectedWord.style.pointerEvents = 'none';
+                selectedMeaning.style.pointerEvents = 'none';
+                
+                matches.push({
+                    word: selectedWord,
+                    meaning: selectedMeaning
+                });
+                
+                selectedWord = null;
+                selectedMeaning = null;
+                
+                if (matches.length === vocabulary.length) {
+                    matchingFeedback.textContent = "✓ 全部配对正确！太棒了！";
+                    matchingFeedback.className = "feedback positive";
+                }
+            } else {
+                selectedWord.classList.add('incorrect');
+                selectedMeaning.classList.add('incorrect');
+                
+                setTimeout(() => {
+                    selectedWord.classList.remove('incorrect');
+                    selectedMeaning.classList.remove('incorrect');
+                    selectedWord.classList.remove('selected');
+                    selectedMeaning.classList.remove('selected');
+                    selectedWord = null;
+                    selectedMeaning = null;
+                }, 1000);
+            }
+        }
+        
+        // 检查所有配对
+        checkMatchingBtn.addEventListener('click', () => {
+            const allCorrect = matches.length === vocabulary.length;
+            
+            if (allCorrect) {
+                matchingFeedback.textContent = "✓ 全部配对正确！太棒了！";
+                matchingFeedback.className = "feedback positive";
+            } else {
+                matchingFeedback.textContent = `还有${vocabulary.length - matches.length}个单词没有配对正确，继续加油！`;
+                matchingFeedback.className = "feedback negative";
+            }
+        });
+        
+        // 重置配对游戏
+        resetMatchingBtn.addEventListener('click', initMatchingGame);
+        
+        // 3. 单词填空游戏
+        const fillBlankPoem = document.getElementById('fillBlankPoem');
+        const wordOptions = document.getElementById('wordOptions');
+        const checkFillBlankBtn = document.getElementById('checkFillBlank');
+        const resetFillBlankBtn = document.getElementById('resetFillBlank');
+        const fillBlankFeedback = document.getElementById('fillBlankFeedback');
+        
+        let blankElements = [];
+        let selectedOption = null;
+        let selectedBlank = null;
+        let wordOptionsElements = [];
+        
+        // 初始化填空游戏
+        function initFillBlankGame() {
+            fillBlankPoem.innerHTML = '';
+            wordOptions.innerHTML = '';
+            blankElements = [];
+            wordOptionsElements = [];
+            selectedOption = null;
+            selectedBlank = null;
+            fillBlankFeedback.textContent = '';
+            
+            // 创建填空短文
+            const wordsToBlank = ['Dad', 'mum', 'brother', 'sister', 'Grandpa', 'grandma', 'Love', 'love'];
+            let blankIndex = 0;
+            
+            poemLines.forEach((line, lineIndex) => {
+                const lineWords = line.split(/(\s+)/).filter(w => w.trim().length > 0);
+                const lineElement = document.createElement('div');
+                
+                lineWords.forEach((word, wordIndex) => {
+                    const cleanWord = word.replace(/[.,]/g, '');
+                    
+                    if (wordsToBlank.includes(cleanWord)) {
+                        const blank = document.createElement('span');
+                        blank.className = 'blank';
+                        blank.dataset.correct = cleanWord;
+                        blank.dataset.index = blankIndex++;
+                        blank.textContent = '______';
+                        
+                        blank.addEventListener('click', function() {
+                            // 取消之前的选择
+                            document.querySelectorAll('.blank').forEach(b => {
+                                b.style.borderBottom = '2px solid #4d96ff';
+                            });
+                            
+                            // 选择当前空白
+                            this.style.borderBottom = '2px solid #ff6b6b';
+                            selectedBlank = this;
+                            
+                            // 如果有选中的单词选项，直接填充
+                            if (selectedOption) {
+                                fillBlank();
+                            }
+                        });
+                        
+                        lineElement.appendChild(blank);
+                        blankElements.push(blank);
+                        
+                        // 添加标点符号
+                        if (word.endsWith('.') || word.endsWith(',')) {
+                            lineElement.appendChild(document.createTextNode(word.slice(-1)));
+                        }
+                    } else {
+                        lineElement.appendChild(document.createTextNode(word));
+                    }
+                    
+                    // 添加空格
+                    if (wordIndex < lineWords.length - 1) {
+                        lineElement.appendChild(document.createTextNode(' '));
+                    }
+                });
+                
+                fillBlankPoem.appendChild(lineElement);
+            });
+            
+            // 准备单词选项
+            const uniqueWords = [...new Set(wordsToBlank)];
+            
+            uniqueWords.forEach((word, index) => {
+                const option = document.createElement('div');
+                option.className = 'word-option';
+                option.textContent = word;
+                option.dataset.word = word;
+                option.appendChild(createSpeakerIcon());
+                
+                option.addEventListener('click', function() {
+                    // 取消之前的选择
+                    wordOptionsElements.forEach(opt => {
+                        opt.style.backgroundColor = '';
+                    });
+                    
+                    // 选择当前选项
+                    this.style.backgroundColor = '#e3f2fd';
+                    selectedOption = this.dataset.word;
+                    
+                    // 如果有选中的空白，直接填充
+                    if (selectedBlank) {
+                        fillBlank();
+                    }
+                });
+                
+                wordOptions.appendChild(option);
+                wordOptionsElements.push(option);
+            });
+        }
+        
+        // 填空
+        function fillBlank() {
+            if (!selectedBlank || !selectedOption) return;
+            
+            selectedBlank.textContent = selectedOption;
+            selectedBlank.dataset.filled = selectedOption;
+            selectedBlank.style.borderBottom = '2px solid #4d96ff';
+            
+            // 重置选择
+            wordOptionsElements.forEach(opt => {
+                opt.style.backgroundColor = '';
+            });
+            selectedBlank = null;
+            selectedOption = null;
+        }
+        
+        // 检查填空
+        checkFillBlankBtn.addEventListener('click', () => {
+            let allCorrect = true;
+            let filledCount = 0;
+            
+            blankElements.forEach(blank => {
+                if (blank.dataset.filled) {
+                    filledCount++;
+                    
+                    if (blank.dataset.filled === blank.dataset.correct) {
+                        blank.style.backgroundColor = '#c8e6c9';
+                    } else {
+                        blank.style.backgroundColor = '#ffcdd2';
+                        allCorrect = false;
+                    }
+                } else {
+                    allCorrect = false;
+                }
+            });
+            
+            if (filledCount === 0) {
+                fillBlankFeedback.textContent = "请先选择单词填入空白处。";
+                fillBlankFeedback.className = "feedback negative";
+            } else if (allCorrect && filledCount === blankElements.length) {
+                fillBlankFeedback.textContent = "✓ 全部填空正确！太棒了！";
+                fillBlankFeedback.className = "feedback positive";
+            } else {
+                fillBlankFeedback.textContent = `还有${blankElements.length - filledCount}个空白未填，已填的${filledCount}个中有${blankElements.filter(b => b.dataset.filled && b.dataset.filled !== b.dataset.correct).length}个不正确。`;
+                fillBlankFeedback.className = "feedback negative";
+            }
+        });
+        
+        // 重置填空游戏
+        resetFillBlankBtn.addEventListener('click', initFillBlankGame);
+        
+        // 初始化所有游戏
+        window.onload = function() {
+            initMatchingGame();
+            initFillBlankGame();
+        };
+    </script>
+</body>
+</html>
