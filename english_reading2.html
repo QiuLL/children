@@ -138,6 +138,7 @@
         let recognition;
         let isRecording = false;
         let correctCount = 0;
+        let isReading = false;
         
         // DOM元素
         const storyText = document.getElementById('storyText');
@@ -174,24 +175,28 @@
         function readStory() {
             if (currentWordIndex >= words.length) {
                 currentWordIndex = 0;
+                isReading = false;
                 startBtn.textContent = 'Start Reading';
                 return;
             }
             
+            isReading = true;
             highlightWord(currentWordIndex);
             
             // 使用语音合成API朗读单词
             const utterance = new SpeechSynthesisUtterance(words[currentWordIndex]);
             utterance.rate = 0.8;
+            utterance.onend = () => {
+                currentWordIndex++;
+                
+                if (currentWordIndex < words.length) {
+                    setTimeout(readStory, 500);
+                } else {
+                    isReading = false;
+                    startBtn.textContent = 'Start Reading';
+                }
+            };
             speechSynthesis.speak(utterance);
-            
-            currentWordIndex++;
-            
-            if (currentWordIndex < words.length) {
-                setTimeout(readStory, 1000);
-            } else {
-                startBtn.textContent = 'Start Reading';
-            }
         }
         
         // 初始化语音识别
@@ -210,7 +215,7 @@
             
             recognition.onresult = (event) => {
                 const spokenWord = event.results[0][0].transcript.trim().toLowerCase();
-                const currentWord = words[currentWordIndex - 1].toLowerCase();
+                const currentWord = words[currentWordIndex].toLowerCase();
                 
                 // 检查发音
                 checkPronunciation(spokenWord, currentWord);
@@ -284,28 +289,30 @@
             } else {
                 startBtn.textContent = 'Start Reading';
                 currentWordIndex = words.length;
+                isReading = false;
                 speechSynthesis.cancel();
             }
         });
         
         // 开始/停止录音
         recordBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                if (currentWordIndex === 0 || currentWordIndex >= words.length) {
-                    resultDiv.textContent = "Please start reading first";
-                    resultDiv.className = "result incorrect";
-                    return;
-                }
-                
-                try {
-                    initSpeechRecognition();
-                    recognition.start();
-                } catch (error) {
-                    resultDiv.textContent = "Speech recognition not supported";
-                    resultDiv.className = "result incorrect";
-                }
-            } else {
+            if (isRecording) {
                 recognition.stop();
+                return;
+            }
+            
+            if (!isReading || currentWordIndex >= words.length) {
+                resultDiv.textContent = "Please start reading and wait for a word to highlight";
+                resultDiv.className = "result incorrect";
+                return;
+            }
+            
+            try {
+                initSpeechRecognition();
+                recognition.start();
+            } catch (error) {
+                resultDiv.textContent = "Speech recognition not supported";
+                resultDiv.className = "result incorrect";
             }
         });
         
