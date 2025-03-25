@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family English Learning</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .story-text {
+            font-size: 24px;
+            line-height: 1.6;
+            margin: 20px 0;
+            min-height: 120px;
+        }
+        .highlight {
+            background-color: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #3e8e41;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .recording {
+            background-color: #f44336 !important;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+        .correct {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .incorrect {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            border-radius: 10px;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .pronunciation-hint {
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+        }
+        .family-image {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background-color: #ffccbc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Family English Learning</h1>
+    
+    <div class="family-image">👨‍👩‍👧‍👦</div>
+    
+    <div class="container">
+        <div class="story-text" id="storyText">
+            Dad, mum, brother, sister. Grandpa, grandma, all together. Love, love, we love each other.
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Reading</button>
+            <button id="recordBtn">Record & Check</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+        <div class="pronunciation-hint" id="hint"></div>
+    </div>
+    
+    <script>
+        // 学习内容
+        const story = "Dad, mum, brother, sister. Grandpa, grandma, all together. Love, love, we love each other.";
+        const words = story.split(/(\s|\.|,)/).filter(word => word.trim().length > 0);
+        let currentWordIndex = 0;
+        let recognition;
+        let isRecording = false;
+        let correctCount = 0;
+        
+        // DOM元素
+        const storyText = document.getElementById('storyText');
+        const startBtn = document.getElementById('startBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const resultDiv = document.getElementById('result');
+        const hintDiv = document.getElementById('hint');
+        const progressBar = document.getElementById('progressBar');
+        
+        // 初始化故事文本
+        function initializeStory() {
+            const html = words.map(word => {
+                if (word === '.' || word === ',') {
+                    return `<span class="punctuation">${word}</span>`;
+                }
+                return `<span>${word}</span>`;
+            }).join(' ');
+            storyText.innerHTML = html;
+        }
+        
+        // 高亮当前单词
+        function highlightWord(index) {
+            const spans = storyText.querySelectorAll('span');
+            spans.forEach((span, i) => {
+                span.classList.toggle('highlight', i === index);
+            });
+            
+            // 更新进度条
+            const progress = ((index + 1) / words.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // 朗读故事（逐词）
+        function readStory() {
+            if (currentWordIndex >= words.length) {
+                currentWordIndex = 0;
+                startBtn.textContent = 'Start Reading';
+                return;
+            }
+            
+            highlightWord(currentWordIndex);
+            
+            // 使用语音合成API朗读单词
+            const utterance = new SpeechSynthesisUtterance(words[currentWordIndex]);
+            utterance.rate = 0.8;
+            speechSynthesis.speak(utterance);
+            
+            currentWordIndex++;
+            
+            if (currentWordIndex < words.length) {
+                setTimeout(readStory, 1000);
+            } else {
+                startBtn.textContent = 'Start Reading';
+            }
+        }
+        
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                isRecording = true;
+                recordBtn.classList.add('recording');
+                resultDiv.textContent = "Listening...";
+                resultDiv.className = "result";
+            };
+            
+            recognition.onresult = (event) => {
+                const spokenWord = event.results[0][0].transcript.trim().toLowerCase();
+                const currentWord = words[currentWordIndex - 1].toLowerCase();
+                
+                // 检查发音
+                checkPronunciation(spokenWord, currentWord);
+            };
+            
+            recognition.onerror = (event) => {
+                resultDiv.textContent = `Error: ${event.error}`;
+                resultDiv.className = "result incorrect";
+                resetRecording();
+            };
+            
+            recognition.onend = resetRecording;
+        }
+        
+        // 检查发音
+        function checkPronunciation(spokenWord, correctWord) {
+            // 简单的发音检查逻辑
+            const isCorrect = spokenWord === correctWord;
+            
+            if (isCorrect) {
+                correctCount++;
+                resultDiv.textContent = `✅ Correct! You said "${spokenWord}"`;
+                resultDiv.className = "result correct";
+                showPronunciationHint(correctWord, true);
+            } else {
+                resultDiv.textContent = `❌ Incorrect. You said "${spokenWord}", expected "${correctWord}"`;
+                resultDiv.className = "result incorrect";
+                showPronunciationHint(correctWord, false);
+            }
+        }
+        
+        // 显示发音提示
+        function showPronunciationHint(word, isCorrect) {
+            const hints = {
+                'dad': '/dæd/ (like "bad")',
+                'mum': '/mʌm/ (like "some")',
+                'brother': '/ˈbrʌðər/ ("br" + "other")',
+                'sister': '/ˈsɪstər/ ("sis" + "ter")',
+                'grandpa': '/ˈɡrænpɑː/ ("grand" + "pa")',
+                'grandma': '/ˈɡrænmɑː/ ("grand" + "ma")',
+                'all': '/ɔːl/ (like "ball")',
+                'together': '/təˈɡeðər/ ("to" + "gather")',
+                'love': '/lʌv/ (like "glove")',
+                'we': '/wiː/ (like "see")',
+                'each': '/iːtʃ/ ("ee" + "ch")',
+                'other': '/ˈʌðər/ ("uh" + "ther")'
+            };
+            
+            if (isCorrect) {
+                hintDiv.textContent = `Great! ${word} is pronounced ${hints[word] || ''}`;
+            } else {
+                hintDiv.textContent = `Try again: ${word} is pronounced ${hints[word] || ''}`;
+                // 自动重新朗读正确发音
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.rate = 0.7;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // 重置录音状态
+        function resetRecording() {
+            isRecording = false;
+            recordBtn.classList.remove('recording');
+        }
+        
+        // 开始/停止朗读
+        startBtn.addEventListener('click', () => {
+            if (startBtn.textContent === 'Start Reading') {
+                startBtn.textContent = 'Stop Reading';
+                readStory();
+            } else {
+                startBtn.textContent = 'Start Reading';
+                currentWordIndex = words.length;
+                speechSynthesis.cancel();
+            }
+        });
+        
+        // 开始/停止录音
+        recordBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                if (currentWordIndex === 0 || currentWordIndex >= words.length) {
+                    resultDiv.textContent = "Please start reading first";
+                    resultDiv.className = "result incorrect";
+                    return;
+                }
+                
+                try {
+                    initSpeechRecognition();
+                    recognition.start();
+                } catch (error) {
+                    resultDiv.textContent = "Speech recognition not supported";
+                    resultDiv.className = "result incorrect";
+                }
+            } else {
+                recognition.stop();
+            }
+        });
+        
+        // 初始化页面
+        initializeStory();
+    </script>
+</body>
+</html>
